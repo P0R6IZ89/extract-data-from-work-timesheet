@@ -1,7 +1,10 @@
 import os
 # not final choice
-import time
 import signal
+import time
+
+import datetime
+from calendar import monthrange
 
 from flask import Flask
 
@@ -15,19 +18,21 @@ from selenium.webdriver.support import expected_conditions
 # Initialize Flask
 app = Flask(__name__)
 
+current_time = datetime.datetime.now()
+
 # Initialize Seleniun
-is_loged_in = False
 user_id = '01243111'
 user_password ='04180418'
 
 user_id_field = 'uid'
 user_password_field = 'pwd'
 
-tabs_list = ['', 'information', 'calender', 'summary']
+tabs_list = ['', 'information', 'calendar', 'summary']
 time_line_alert_types = ['Shift fixed', 'Post notification', 'Shift adjustment', 'Shift draft']
 base_url = 'https://wps.fastretailing.com/'
 
 time_line_xpath = '/html/body/div[2]/div[1]/div[1]/div/section/ng-include[2]'
+information_class = 'information'
 
 webdriver_path = '/usr/bin/geckodriver'
 
@@ -62,34 +67,66 @@ class Scrapper(object):
         pass
     
     def scrapp(self, tabs_list):
+        days_list = []
         for tab in tabs_list:
 
             driver.get(os.path.join(base_url, tab))
 
             if not tab:
-                
                 Login.login(self)
+                print('*****Timeline*****')
                 time_line_elem = WebDriverWait(driver, 10).until(
                     expected_conditions.presence_of_element_located(
                         (By.XPATH, time_line_xpath)
                     )
                 )
+                # print(time_line_elem.text)
 
-                print(is_loged_in)
-                print(time_line_elem.text)
-                time.sleep(10)
+            elif tab == 'information':
+                print('*****Information*****')
+                for post in range(1, 4):
+                    information_elem = WebDriverWait(driver, 10).until(
+                        expected_conditions.presence_of_element_located(
+                            (By.XPATH, '/html/body/div[2]/div[1]/div/div/section/section/div/div[{0}]'.format(post))
+                        )
+                    )
+                    # print(information_elem.text)
 
-            if tab == 'information':
-                time.sleep(2)
-                pass
+            elif tab == 'calendar':
+                print('*****Calendar*****')
+                # print(monthrange(current_time.year, current_time.month))
+                # Search for an element to check whether loaded
+                load_page = WebDriverWait(driver, 10).until(expected_conditions.presence_of_element_located((By.XPATH, '/html/body/div[2]/div[1]/div/div/section/div/section/ng-include[1]/table/tbody')))
+                if load_page:
+                    for week in range(1, 6):
+                        for work_day in range(1, 8):
+                            for index in range(1, 5):
+                                try:
+                                    # print('week', week, 'day', work_day, 'index', index)
+                                    each_day = driver.find_element_by_xpath(
+                                        '/html/body/div[2]/div[1]/div/div/section/div/section/ng-include[1]/table/tbody/tr[{0}]/td[{1}]/a/div/div[{2}]/div'
+                                        .format(week, work_day, index))
+                                    if each_day.text:
+                                        days_list.append(each_day.text)
+                                except:
+                                    pass
+                    
+                    print(days_list)
+                    print('TODAY IS')
+                    print(days_list[current_time.day - 1])
+                    print('Tomorrow is')
+                    # CHANGE HERE !!!!!!!!!!!!!!
+                    if 29 > monthrange(current_time.year, current_time.month)[1]:
+                        print('if tomorrow is more than lastday of calendar')
+                        print(days_list[current_time.day])
+                    else:
+                        pass
+                        
+                    days_list.clear()
 
-            if tab == 'calender':
-                time.sleep(2)
-                pass
 
-            if tab == 'summary':
-                time.sleep(2)
-                pass
+            elif tab == 'summary':
+                print('*****Summary*****')
 
             # driver.get(os.path.join(base_url, tab))
             # time.sleep(5)

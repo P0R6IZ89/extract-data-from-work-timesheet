@@ -1,7 +1,7 @@
 *.log
+ToDo
+appClone.py
 geckodriver
 geckodriver.log
-ToDo
 __pycache__/
 env/
-appClone.py
