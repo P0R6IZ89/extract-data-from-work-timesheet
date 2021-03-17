@@ -109,7 +109,6 @@ class WebScrapper(object):
                                     except:
                                         pass
                 else:
-                    pass
                     days_list.clear()
         driver.close()
 
