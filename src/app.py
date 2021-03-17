@@ -71,7 +71,7 @@ class WebScrapper(object):
                     )
                 )
 
-            elif tab == 'information':
+            elif tab == urls_suffix_list[1]:
                 for post in range(1, 4): # Extract last 4 information posts
                     information_elem = wait.until(
                         expected_conditions.presence_of_element_located(
@@ -79,7 +79,7 @@ class WebScrapper(object):
                         )
                     )
 
-            elif tab == 'calendar':
+            elif tab == urls_suffix_list[2]:
                 wait.until(expected_conditions.presence_of_element_located((By.XPATH, wait_02)))
                 for week in range(1, 6):
                     for work_day in range(1, 8):
