@@ -1,5 +1,5 @@
 *.log
-secrets.py
+secrets
 geckodriver
 __pycache__/
 env/
