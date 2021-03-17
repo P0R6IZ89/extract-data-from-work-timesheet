@@ -17,11 +17,11 @@ from secrets import USER_ID, USER_PASSWORD, BASE_URL, TAB_LIST, TIMELINE_ALERT_T
 
 current_time = datetime.datetime.now()
 
-user_id = USER_ID
-user_password = USER_PASSWORD
+user_id = USER_ID # Your user id to login
+user_password = USER_PASSWORD # Your password
 
-user_id_field = 'uid'
-user_password_field = 'pwd'
+user_id_field = 'uid' # 
+user_password_field = 'pwd' #
 
 tabs_list = TAB_LIST
 timeline_alert_types = TIMELINE_ALERT_TYPE
