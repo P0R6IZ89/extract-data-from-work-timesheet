@@ -6,8 +6,6 @@ import time
 import datetime
 from calendar import monthrange
 
-from flask import Flask
-
 from selenium import webdriver
 from selenium.webdriver.firefox.options import Options
 from selenium.webdriver.common.keys import Keys
@@ -16,9 +14,6 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions
 
 from secrets import USER_ID, USER_PASSWORD, BASE_URL, TAB_LIST, TIMELINE_ALERT_TYPE, TIMELINE_XPATH
-
-# Initialize Flask
-app = Flask(__name__)
 
 current_time = datetime.datetime.now()
 
@@ -41,13 +36,15 @@ options = Options()
 options.add_argument("--no-sandbox")
 options.add_argument('--disable-gpu')
 driver = webdriver.Firefox(executable_path=webdriver_path, options=options)
+wait = WebDriverWait(driver, 10)
 
-class Login(object):
-    def __init__(self):
-        pass
+
         
-    def login (self):
-        id_elem = WebDriverWait(driver, 10).until(
+class WebScrapper(object):
+    def __init__(self):
+        print("init DONE")
+        driver.get(os.path.join(base_url, 'login'))
+        id_elem = wait.until(
             expected_conditions.presence_of_element_located(
                 (By.ID, user_id_field)
                 )
@@ -56,35 +53,36 @@ class Login(object):
         pwd_elem = driver.find_element_by_id(user_password_field)
         pwd_elem.send_keys(user_password)
         pwd_elem.send_keys(Keys.RETURN)
-        self.is_loged_in = True
 
-class Scrapper(object):
-    def __init__(self):
-        pass
     
-    def scrapp(self, tabs_list):
+    def scrap(self):
+        print("scrap DONE")
+        data = 'data'
         days_list = []
         for tab in tabs_list:
+            print(tab)
+            wait.until(expected_conditions.presence_of_element_located(
+                (By.CSS_SELECTOR, 'html.ng-scope body.pace-done')
+            ))
+            print('loaded', tab)
             driver.get(os.path.join(base_url, tab))
             if not tab:
-                Login.login(self)
-                time_line_elem = WebDriverWait(driver, 10).until(
-                    expected_conditions.presence_of_element_located(
+                time_line_elem = wait.until(
+                    expected_conditions.visibility_of_element_located(
                         (By.XPATH, timeline_xpath)
                     )
                 )
 
             elif tab == 'information':
                 for post in range(1, 4):
-                    information_elem = WebDriverWait(driver, 10).until(
+                    information_elem = wait.until(
                         expected_conditions.presence_of_element_located(
                             (By.XPATH, '/html/body/div[2]/div[1]/div/div/section/section/div/div[{0}]'.format(post))
                         )
                     )
 
             elif tab == 'calendar':
-                print('*****Calendar*****')
-                load_page = WebDriverWait(driver, 10).until(expected_conditions.presence_of_element_located((By.XPATH, '/html/body/div[2]/div[1]/div/div/section/div/section/ng-include[1]/table/tbody')))
+                load_page = wait.until(expected_conditions.presence_of_element_located((By.XPATH, '/html/body/div[2]/div[1]/div/div/section/div/section/ng-include[1]/table/tbody')))
                 if load_page:
                     for week in range(1, 6):
                         for work_day in range(1, 8):
@@ -100,10 +98,10 @@ class Scrapper(object):
                                     pass
 
                 if current_time.day > monthrange(current_time.year, current_time.month)[1]:
-                    next_month = WebDriverWait(driver, 10).until(
+                    next_month = wait.until(
                         expected_conditions.presence_of_element_located(
                             (By.XPATH, '/html/body/div[2]/div[1]/div/div/section/div/ng-include/header/div/ul/li[5]/a/ng-include/div'))).click()
-                    load_page = WebDriverWait(driver, 10).until(expected_conditions.presence_of_element_located((By.XPATH, '/html/body/div[2]/div[1]/div/div/section/div/section/ng-include[1]/table/tbody')))
+                    load_page = wait.until(expected_conditions.presence_of_element_located((By.XPATH, '/html/body/div[2]/div[1]/div/div/section/div/section/ng-include[1]/table/tbody')))
                     time.sleep(5)
                     def extract_next_month():
                         for week in range(1, 6):
@@ -129,10 +127,9 @@ class Scrapper(object):
                 pass
 
         driver.close()
-            
-# Draft
-x = Scrapper()
-x.scrapp(tabs_list)
+        return data
+x = WebScrapper()
+x.scrap()
 
 def keyboardInterruptHandler(signal, frame):
     print('Exiting Driver')
@@ -140,11 +137,3 @@ def keyboardInterruptHandler(signal, frame):
     exit(0)
 
 signal.signal(signal.SIGINT, keyboardInterruptHandler)
-
-
-# @app.route('/')
-# def hello():
-#     return 'Hello, its working'
-
-# if __name__ == '__main__':
-#     app.run(host='0.0.0.0', port=8000)

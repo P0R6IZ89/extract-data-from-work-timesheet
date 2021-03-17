@@ -1,17 +1,17 @@
-import datetime
-from calendar import monthrange
+from flask import Flask
+from flask_sqlalchemy import SQLAlchemy,
 
-list = [1, 2, 3, 4, 5, 6, 7, 8, 9]
+app = Flask(__name__)
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///testdb.db'
+db = SQLAlchemy(app)
 
-current_time = datetime.datetime.now()
-print(current_time.day)
+class User(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, unique=True, nullable=True)
+    user_password = db.Column(db.Integer, unique=False, nullable=True)
+    time_line_elem = db.Column(db.Text)
+    information_elem = db.Column(db.Text)
+    days_list= db.Column(db.Text)
 
-print(monthrange(current_time.year, 1))
-for n in range(10, 12):
-    for r in range(1, 6):
-        if r == 4:
-            # r += 1
-            break
-        print(n)
-        print(r)
-        
+    def __repr__(self):
+        return f"User('{self.id}', '{self.user_id}', '{self.user_password}', '{self.time_line_elem}', '{self.information_elem}', '{self.days_list}')"
