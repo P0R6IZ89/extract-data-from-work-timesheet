@@ -1,7 +1,5 @@
 import os
-# not final choice
 import signal
-import time
 
 import datetime
 from calendar import monthrange
@@ -13,23 +11,27 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions
 
-from secrets import USER_ID, USER_PASSWORD, BASE_URL, TAB_LIST, TIMELINE_ALERT_TYPE, TIMELINE_XPATH
+from secrets import *
 
 current_time = datetime.datetime.now()
 
 user_id = USER_ID # Your user id to login
 user_password = USER_PASSWORD # Your password
 
-user_id_field = 'uid' # 
-user_password_field = 'pwd' #
+user_id_field = 'uid' 
+user_password_field = 'pwd' 
 
-tabs_list = TAB_LIST
-timeline_alert_types = TIMELINE_ALERT_TYPE
 base_url = BASE_URL
+urls_suffix_list = URLS_SUFFIX_LIST
 
-timeline_xpath = TIMELINE_XPATH
+wait_00 = WAIT_00
+wait_01 = WAIT_01
+wait_02 = WAIT_02
+xpath_00 = XPATH_00
+xpath_01 = XPATH_01
+xpath_02 = XPATH_02
 
-webdriver_path = '/usr/bin/geckodriver'
+webdriver_path = '/usr/bin/geckodriver' 
 
 options = Options()
 # options.add_argument("--headless")
@@ -42,7 +44,6 @@ wait = WebDriverWait(driver, 10)
         
 class WebScrapper(object):
     def __init__(self):
-        print("init DONE")
         driver.get(os.path.join(base_url, 'login'))
         id_elem = wait.until(
             expected_conditions.presence_of_element_located(
@@ -56,84 +57,61 @@ class WebScrapper(object):
 
     
     def scrap(self):
-        print("scrap DONE")
-        data = 'data'
         days_list = []
-        for tab in tabs_list:
+        for tab in urls_suffix_list:
             print(tab)
             wait.until(expected_conditions.presence_of_element_located(
-                (By.CSS_SELECTOR, 'html.ng-scope body.pace-done')
+                (By.CSS_SELECTOR, wait_00)
             ))
-            print('loaded', tab)
             driver.get(os.path.join(base_url, tab))
-            if not tab:
+            if not tab: # timeline
                 time_line_elem = wait.until(
                     expected_conditions.visibility_of_element_located(
-                        (By.XPATH, timeline_xpath)
+                        (By.XPATH, wait_01)
                     )
                 )
 
             elif tab == 'information':
-                for post in range(1, 4):
+                for post in range(1, 4): # Extract last 4 information posts
                     information_elem = wait.until(
                         expected_conditions.presence_of_element_located(
-                            (By.XPATH, '/html/body/div[2]/div[1]/div/div/section/section/div/div[{0}]'.format(post))
+                            (By.XPATH, XPATH_00.format(post))
                         )
                     )
 
             elif tab == 'calendar':
-                load_page = wait.until(expected_conditions.presence_of_element_located((By.XPATH, '/html/body/div[2]/div[1]/div/div/section/div/section/ng-include[1]/table/tbody')))
-                if load_page:
-                    for week in range(1, 6):
-                        for work_day in range(1, 8):
-                            for index in range(1, 5):
-                                try:
-                                    each_day = driver.find_element_by_xpath(
-                                        '/html/body/div[2]/div[1]/div/div/section/div/section/ng-include[1]/table/tbody/tr[{0}]/td[{1}]/a/div/div[{2}]/div'
-                                        .format(week, work_day, index))
-                                    if each_day.text:
-                                        days_list.append(each_day.text)
-                                        break
-                                except:
-                                    pass
+                wait.until(expected_conditions.presence_of_element_located((By.XPATH, wait_02)))
+                for week in range(1, 6):
+                    for work_day in range(1, 8):
+                        for index in range(1, 5):
+                            try:
+                                each_day = driver.find_element_by_xpath(xpath_01.format(week, work_day, index))
+                                if each_day.text: # If there are data append to list
+                                    days_list.append(each_day.text)
+                                    break
+                            except:
+                                pass
 
-                if current_time.day > monthrange(current_time.year, current_time.month)[1]:
+                if current_time.day > monthrange(current_time.year, current_time.month)[1]: # If is last day of month, change to next page
                     next_month = wait.until(
                         expected_conditions.presence_of_element_located(
-                            (By.XPATH, '/html/body/div[2]/div[1]/div/div/section/div/ng-include/header/div/ul/li[5]/a/ng-include/div'))).click()
-                    load_page = wait.until(expected_conditions.presence_of_element_located((By.XPATH, '/html/body/div[2]/div[1]/div/div/section/div/section/ng-include[1]/table/tbody')))
-                    time.sleep(5)
+                            (By.XPATH, xpath_02))).click() 
+                    wait.until(expected_conditions.presence_of_element_located((By.XPATH, wait_02)))
                     def extract_next_month():
                         for week in range(1, 6):
                             for work_day in range(1, 8):
                                 for index in range(1, 5):
                                     try:
-                                        next_month_first_day = driver.find_element_by_xpath(
-                                            '/html/body/div[2]/div[1]/div/div/section/div/section/ng-include[1]/table/tbody/tr[{0}]/td[{1}]/a/div/div[{2}]/div'
-                                            .format(week, work_day, index))
+                                        next_month_first_day = driver.find_element_by_xpath(xpath_01.format(week, work_day, index))
                                         if next_month_first_day.text:
                                             clean_next_month_first_day = next_month_first_day.text
                                             return clean_next_month_first_day
                                     except:
                                         pass
-                        
-                    print(extract_next_month())
                 else:
                     pass
-                        
                     days_list.clear()
-
-            elif tab == 'summary':
-                pass
-
         driver.close()
-        return data
+
 x = WebScrapper()
 x.scrap()
-
-def keyboardInterruptHandler(signal, frame):
-    print('Exiting Driver')
-    driver.close()
-    exit(0)
-
-signal.signal(signal.SIGINT, keyboardInterruptHandler)
